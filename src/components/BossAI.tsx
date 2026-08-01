@@ -19,7 +19,18 @@ import {
   Facebook,
   Instagram,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Megaphone,
+  Palette,
+  Code,
+  BarChart3,
+  Copy,
+  Check,
+  Bot,
+  User,
+  MessageSquare,
+  Search,
+  ExternalLink
 } from 'lucide-react';
 
 interface Campaign {
@@ -36,6 +47,41 @@ interface RoadmapPhase {
   expectedOutcome: string;
 }
 
+interface SpecialistAgentMarketing {
+  title: string;
+  positioning: string;
+  messagingHooks: string[];
+  strategy: string;
+}
+
+interface SpecialistAgentDesigning {
+  title: string;
+  aesthetic: string;
+  canvaQueries: string[];
+  colorPalette: string[];
+}
+
+interface SpecialistAgentDevelopment {
+  title: string;
+  techStack: string;
+  keyFeatures: string[];
+  conversionOptimization: string;
+}
+
+interface SpecialistAgentAds {
+  title: string;
+  campaignStructure: string;
+  targetingTactics: string[];
+  trackingSetup: string;
+}
+
+interface SpecialistAgents {
+  marketing: SpecialistAgentMarketing;
+  designing: SpecialistAgentDesigning;
+  development: SpecialistAgentDevelopment;
+  adsManagement: SpecialistAgentAds;
+}
+
 interface AnalysisResult {
   recommendationSummary: string;
   budgetAllocation: {
@@ -45,6 +91,7 @@ interface AnalysisResult {
     instaAmount: number;
     splitReasoning: string;
   };
+  specialistAgents?: SpecialistAgents;
   suggestedCampaigns: Campaign[];
   roadmap: RoadmapPhase[];
   method: string;
@@ -97,6 +144,58 @@ export default function BossAI() {
   const [loadingStage, setLoadingStage] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [activeAgentTab, setActiveAgentTab] = useState<'marketing' | 'designing' | 'development' | 'adsManagement'>('designing');
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; canvaQueries?: string[] }>>([
+    {
+      role: 'assistant',
+      content: "Hello! I am Boss AI, leading the four specialist teams at The Boss Marketers (Marketing, Designing, Development, and Ads Management). How can we guide your business setup today?"
+    }
+  ]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [copiedQuery, setCopiedQuery] = useState<string | null>(null);
+
+  const handleCopyQuery = (query: string) => {
+    navigator.clipboard.writeText(query);
+    setCopiedQuery(query);
+    setTimeout(() => setCopiedQuery(null), 2500);
+  };
+
+  const handleSendChat = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMsg = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setChatLoading(true);
+
+    try {
+      const response = await fetch('/api/boss-ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          contextHistory: chatMessages.slice(-6),
+          agent: activeAgentTab
+        })
+      });
+      const data = await response.json();
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.reply || "Boss AI is ready to guide your business setup with our specialist team!",
+        canvaQueries: data.canvaQueries
+      }]);
+    } catch (err) {
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Boss AI and our 4 Specialist Agents are at your service! For design tasks, use exact Canva queries like `Minimalist E-Commerce Instagram Story Template` or `Clean modern dark post layout Canva`."
+      }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const loadingStages = [
     "Analyzing business niche demographics...",
@@ -460,6 +559,260 @@ I would like to discuss implementing this exact roadmap for my business!`;
                 </p>
               </div>
 
+              {/* SPECIALIST AGENTS ADVICE (Marketing, Designing, Development, Ads Management) */}
+              {result.specialistAgents && (
+                <div className="space-y-6 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 text-blue-500" /> 4 Managed Specialist Teams
+                    </h3>
+                    <span className="text-xs font-mono text-blue-500 uppercase tracking-widest font-bold">The Boss Marketers Framework</span>
+                  </div>
+
+                  {/* Specialist Agent Tabs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-black/5 md:bg-white/5 p-1.5 rounded-2xl border border-black/10 md:border-white/10">
+                    <button
+                      onClick={() => setActiveAgentTab('marketing')}
+                      className={`py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        activeAgentTab === 'marketing'
+                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                          : 'text-black/60 md:text-white/60 hover:text-black md:hover:text-white'
+                      }`}
+                    >
+                      <Megaphone className="w-4 h-4" /> Marketing
+                    </button>
+                    <button
+                      onClick={() => setActiveAgentTab('designing')}
+                      className={`py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        activeAgentTab === 'designing'
+                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                          : 'text-black/60 md:text-white/60 hover:text-black md:hover:text-white'
+                      }`}
+                    >
+                      <Palette className="w-4 h-4" /> Designing
+                    </button>
+                    <button
+                      onClick={() => setActiveAgentTab('development')}
+                      className={`py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        activeAgentTab === 'development'
+                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                          : 'text-black/60 md:text-white/60 hover:text-black md:hover:text-white'
+                      }`}
+                    >
+                      <Code className="w-4 h-4" /> Development
+                    </button>
+                    <button
+                      onClick={() => setActiveAgentTab('adsManagement')}
+                      className={`py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        activeAgentTab === 'adsManagement'
+                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                          : 'text-black/60 md:text-white/60 hover:text-black md:hover:text-white'
+                      }`}
+                    >
+                      <BarChart3 className="w-4 h-4" /> Ads Setup
+                    </button>
+                  </div>
+
+                  {/* Active Agent Content Panel */}
+                  <div className="bg-black/5 md:bg-white/5 border border-black/10 md:border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
+                    {/* 1. MARKETING AGENT */}
+                    {activeAgentTab === 'marketing' && (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-black/10 md:border-white/10 pb-4">
+                          <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-500 flex items-center justify-center font-bold">
+                            <Megaphone className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-lg uppercase tracking-tight">Marketing Agent Strategy</h4>
+                            <p className="text-xs text-black/50 md:text-white/50">Market positioning & high-converting message hooks</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-1">Market Positioning</span>
+                            <p className="text-sm text-black/80 md:text-white/80 leading-relaxed">{result.specialistAgents?.marketing.positioning}</p>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-2">High-Converting Messaging Hooks</span>
+                            <div className="space-y-2">
+                              {result.specialistAgents?.marketing.messagingHooks.map((hook, i) => (
+                                <div key={i} className="p-3 bg-black/5 md:bg-white/5 rounded-xl border border-black/5 md:border-white/5 text-xs font-medium text-black/90 md:text-white/90 flex items-center gap-2">
+                                  <Sparkles className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                                  <span>{hook}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-2">
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-1">Core Campaign Strategy</span>
+                            <p className="text-sm text-black/70 md:text-white/70">{result.specialistAgents?.marketing.strategy}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. DESIGNING AGENT (CANVA ACTIONABLE SEARCH QUERIES) */}
+                    {activeAgentTab === 'designing' && (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-black/10 md:border-white/10 pb-4">
+                          <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
+                            <Palette className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-lg uppercase tracking-tight">Designing Agent & Canva Templates</h4>
+                            <p className="text-xs text-black/50 md:text-white/50">Minimalist visual guidelines & exact actionable Canva queries</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-purple-400 block mb-1">Visual Aesthetic</span>
+                            <p className="text-sm text-black/80 md:text-white/80 leading-relaxed">{result.specialistAgents?.designing.aesthetic}</p>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-mono font-bold uppercase tracking-widest text-purple-400">Actionable Canva Search Queries</span>
+                              <span className="text-[10px] text-purple-400/80 uppercase tracking-widest font-bold">Copy & Paste in Canva</span>
+                            </div>
+                            <div className="space-y-2.5">
+                              {result.specialistAgents?.designing.canvaQueries.map((query, i) => (
+                                <div key={i} className="p-3.5 bg-black/5 md:bg-white/5 rounded-2xl border border-purple-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group hover:border-purple-500/50 transition-all">
+                                  <div className="flex items-center gap-2.5 font-mono text-xs text-purple-300">
+                                    <Search className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                                    <span>{query}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                                    <button
+                                      onClick={() => handleCopyQuery(query)}
+                                      className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[11px] font-bold uppercase tracking-wider rounded-lg border border-purple-500/20 flex items-center gap-1.5 transition-all"
+                                    >
+                                      {copiedQuery === query ? (
+                                        <>
+                                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                          <span className="text-emerald-400">Copied!</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="w-3.5 h-3.5" />
+                                          <span>Copy Query</span>
+                                        </>
+                                      )}
+                                    </button>
+                                    <a
+                                      href={`https://www.canva.com/search?q=${encodeURIComponent(query)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-3 py-1.5 bg-purple-500 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-purple-600 flex items-center gap-1 transition-all"
+                                    >
+                                      <span>Open Canva</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-purple-400 block mb-2">Recommended Brand Palette</span>
+                            <div className="flex items-center gap-3">
+                              {result.specialistAgents?.designing.colorPalette.map((color, i) => (
+                                <div key={i} className="flex items-center gap-2 bg-black/5 md:bg-white/5 px-3 py-1.5 rounded-full border border-black/10 md:border-white/10">
+                                  <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: color }} />
+                                  <span className="text-xs font-mono font-bold uppercase">{color}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. DEVELOPMENT AGENT */}
+                    {activeAgentTab === 'development' && (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-black/10 md:border-white/10 pb-4">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                            <Code className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-lg uppercase tracking-tight">Development Agent Specifications</h4>
+                            <p className="text-xs text-black/50 md:text-white/50">Tech stack, mobile speed optimization & lead capture</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-1">Recommended Tech Stack</span>
+                            <p className="text-sm font-mono text-emerald-400/90">{result.specialistAgents?.development.techStack}</p>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">Essential E-commerce & Conversion Features</span>
+                            <div className="space-y-2">
+                              {result.specialistAgents?.development.keyFeatures.map((feat, i) => (
+                                <div key={i} className="p-3 bg-black/5 md:bg-white/5 rounded-xl border border-black/5 md:border-white/5 text-xs text-black/90 md:text-white/90 flex items-center gap-2">
+                                  <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                  <span>{feat}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-1">Conversion Rate Optimization (CRO)</span>
+                            <p className="text-sm text-black/80 md:text-white/80">{result.specialistAgents?.development.conversionOptimization}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 4. ADS MANAGEMENT AGENT */}
+                    {activeAgentTab === 'adsManagement' && (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-black/10 md:border-white/10 pb-4">
+                          <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-500 flex items-center justify-center font-bold">
+                            <BarChart3 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-lg uppercase tracking-tight">Ads Management Agent Architecture</h4>
+                            <p className="text-xs text-black/50 md:text-white/50">Meta Ads Manager structure, targeting tactics & CAPI setup</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-1">Campaign Architecture</span>
+                            <p className="text-sm text-black/80 md:text-white/80">{result.specialistAgents?.adsManagement.campaignStructure}</p>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-2">Targeting Tactics</span>
+                            <div className="space-y-2">
+                              {result.specialistAgents?.adsManagement.targetingTactics.map((tactic, i) => (
+                                <div key={i} className="p-3 bg-black/5 md:bg-white/5 rounded-xl border border-black/5 md:border-white/5 text-xs text-black/90 md:text-white/90 flex items-center gap-2">
+                                  <Target className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                                  <span>{tactic}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-blue-500 block mb-1">Pixel & Conversions API Setup</span>
+                            <p className="text-sm text-black/80 md:text-white/80">{result.specialistAgents?.adsManagement.trackingSetup}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Budget split section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-black/5 md:bg-white/5 border border-black/10 md:border-white/10 p-8 rounded-3xl space-y-6">
@@ -576,6 +929,94 @@ I would like to discuss implementing this exact roadmap for my business!`;
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* INTERACTIVE BOSS AI SPECIALIST ADVISOR CHAT */}
+              <div className="bg-black/5 md:bg-white/5 border border-black/10 md:border-white/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-black/10 md:border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-500 text-white flex items-center justify-center font-bold">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tight">Ask Boss AI Specialist Agents</h3>
+                      <p className="text-xs text-black/60 md:text-white/60">Guide your multi-step business setup with custom questions</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono uppercase bg-blue-500/10 text-blue-500 border border-blue-500/20 px-3 py-1 rounded-full font-bold">
+                      4 Specialist Teams Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* Message Log */}
+                <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
+                  {chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.role === 'assistant' && (
+                        <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-500 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Bot className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div className={`p-4 rounded-2xl text-sm max-w-xl leading-relaxed ${
+                        msg.role === 'user' 
+                          ? 'bg-blue-500 text-white rounded-tr-none' 
+                          : 'bg-black/5 md:bg-white/5 border border-black/10 md:border-white/10 text-black/90 md:text-white/90 rounded-tl-none whitespace-pre-wrap'
+                      }`}>
+                        {msg.content}
+
+                        {msg.canvaQueries && msg.canvaQueries.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-black/10 md:border-white/10 space-y-2">
+                            <span className="text-[10px] uppercase font-mono tracking-widest text-purple-400 font-bold block">Canva Actionable Search Queries:</span>
+                            {msg.canvaQueries.map((q, i) => (
+                              <div key={i} className="flex items-center justify-between gap-2 p-2 bg-purple-500/10 rounded-xl text-xs font-mono text-purple-300">
+                                <span>{q}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyQuery(q)}
+                                  className="text-[10px] font-bold uppercase bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600 transition-all"
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {msg.role === 'user' && (
+                        <div className="w-8 h-8 rounded-xl bg-black/10 md:bg-white/10 text-black md:text-white flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div className="flex gap-3 items-center text-xs font-mono text-blue-500">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Boss AI Specialist Agents are analyzing your question...</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input form */}
+                <form onSubmit={handleSendChat} className="flex gap-3 pt-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask about design, Canva templates, marketing, web dev, or Meta ads..."
+                    className="flex-1 bg-black/5 md:bg-white/5 border border-black/10 md:border-white/10 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-all placeholder:text-black/40 md:placeholder:text-white/40"
+                  />
+                  <button
+                    type="submit"
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="px-6 py-3.5 bg-blue-500 text-white font-bold uppercase tracking-widest text-xs rounded-2xl hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center gap-2"
+                  >
+                    <span>Ask</span>
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
               </div>
 
               {/* Apply strategy CTA */}
