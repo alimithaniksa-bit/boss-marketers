@@ -224,7 +224,7 @@ function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1 }}
-                href="https://wa.me/923082234916"
+                href="https://wa.me/923150229035"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group px-10 py-5 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full flex items-center gap-3 hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105"
